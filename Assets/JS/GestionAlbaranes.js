@@ -2,7 +2,29 @@ console.log('GestionAlbaranes.js loaded successfully');
 
 // Esperar a que el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOMContentLoaded - Buscando botones...');
+    console.log('DOMContentLoaded - Creando formulario oculto');
+
+    // Crear un formulario oculto para enviar nuestras acciones
+    const hiddenForm = document.createElement('form');
+    hiddenForm.id = 'gestionAlbaranesForm';
+    hiddenForm.method = 'POST';
+    hiddenForm.style.display = 'none';
+
+    // Crear inputs ocultos en el formulario
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.id = 'actionInput';
+    hiddenForm.appendChild(actionInput);
+
+    const tokenInput = document.createElement('input');
+    tokenInput.type = 'hidden';
+    tokenInput.name = '_token';
+    tokenInput.id = 'tokenInput';
+    tokenInput.value = getCSRFToken();
+    hiddenForm.appendChild(tokenInput);
+
+    document.body.appendChild(hiddenForm);
 
     // Buscar botones por su texto
     const buttons = document.querySelectorAll('button');
@@ -10,12 +32,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let convertirBtn = null;
 
     buttons.forEach(btn => {
-        console.log('Botón encontrado:', btn.textContent);
-        if (btn.textContent.includes('Recalcular totales')) {
+        const text = btn.textContent.trim();
+        if (text.includes('Recalcular totales') || text.includes('Recalcul')) {
             recalcularBtn = btn;
             console.log('Botón "Recalcular totales" encontrado');
         }
-        if (btn.textContent.includes('Convertir a facturas')) {
+        if (text.includes('Convertir a facturas') || text.includes('Converti')) {
             convertirBtn = btn;
             console.log('Botón "Convertir a facturas" encontrado');
         }
@@ -25,21 +47,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (recalcularBtn) {
         console.log('Agregando listener a recalcularBtn');
         recalcularBtn.addEventListener('click', function(e) {
-            console.log('Click en Recalcular totales');
+            console.log('Click en Recalcular totales detectado');
             e.preventDefault();
+            e.stopPropagation();
             recalcularTotales();
             return false;
-        });
+        }, true); // usar capture phase
     }
 
     if (convertirBtn) {
         console.log('Agregando listener a convertirBtn');
         convertirBtn.addEventListener('click', function(e) {
-            console.log('Click en Convertir a facturas');
+            console.log('Click en Convertir a facturas detectado');
             e.preventDefault();
+            e.stopPropagation();
             convertirFacturas();
             return false;
-        });
+        }, true); // usar capture phase
     }
 });
 
@@ -56,37 +80,33 @@ function recalcularTotales() {
         return;
     }
 
-    // Usar AJAX para enviar los datos
-    const formData = new FormData();
-    formData.append('action', 'recalcular-totales');
-    formData.append('_token', getCSRFToken());
+    // Obtener el formulario principal
+    const mainForm = document.querySelector('form:not(#gestionAlbaranesForm)');
+    if (!mainForm) {
+        alert('No se encontró el formulario principal');
+        return;
+    }
 
+    // Llenar el formulario oculto con los datos
+    const hiddenForm = document.getElementById('gestionAlbaranesForm');
+    document.getElementById('actionInput').value = 'recalcular-totales';
+
+    // Agregar checkboxes al formulario oculto
     selectedCodes.forEach(code => {
-        formData.append('code[]', code);
+        const codeInput = document.createElement('input');
+        codeInput.type = 'hidden';
+        codeInput.name = 'code[]';
+        codeInput.value = code;
+        hiddenForm.appendChild(codeInput);
     });
 
-    console.log('Enviando recalcularTotales con códigos:', selectedCodes);
+    // Establecer la acción del formulario a la URL actual
+    hiddenForm.action = window.location.href;
 
-    fetch(window.location.href, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        return response.text();
-    })
-    .then(data => {
-        console.log('Response data:', data);
-        alert('Albaranes recalculados. Recargando...');
-        location.reload();
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al recalcular totales: ' + error);
-    });
+    console.log('Enviando formulario con códigos:', selectedCodes);
+
+    // Enviar el formulario
+    hiddenForm.submit();
 }
 
 function convertirFacturas() {
@@ -102,37 +122,33 @@ function convertirFacturas() {
         return;
     }
 
-    // Usar AJAX para enviar los datos
-    const formData = new FormData();
-    formData.append('action', 'convertir-facturas');
-    formData.append('_token', getCSRFToken());
+    // Obtener el formulario principal
+    const mainForm = document.querySelector('form:not(#gestionAlbaranesForm)');
+    if (!mainForm) {
+        alert('No se encontró el formulario principal');
+        return;
+    }
 
+    // Llenar el formulario oculto con los datos
+    const hiddenForm = document.getElementById('gestionAlbaranesForm');
+    document.getElementById('actionInput').value = 'convertir-facturas';
+
+    // Agregar checkboxes al formulario oculto
     selectedCodes.forEach(code => {
-        formData.append('code[]', code);
+        const codeInput = document.createElement('input');
+        codeInput.type = 'hidden';
+        codeInput.name = 'code[]';
+        codeInput.value = code;
+        hiddenForm.appendChild(codeInput);
     });
 
-    console.log('Enviando convertirFacturas con códigos:', selectedCodes);
+    // Establecer la acción del formulario a la URL actual
+    hiddenForm.action = window.location.href;
 
-    fetch(window.location.href, {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        return response.text();
-    })
-    .then(data => {
-        console.log('Response data:', data);
-        alert('Albaranes convertidos a facturas. Recargando...');
-        location.reload();
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al convertir a facturas: ' + error);
-    });
+    console.log('Enviando formulario con códigos:', selectedCodes);
+
+    // Enviar el formulario
+    hiddenForm.submit();
 }
 
 function getSelectedCodes() {
