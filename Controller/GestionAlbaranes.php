@@ -38,8 +38,8 @@ class GestionAlbaranes extends ListController
         $this->addSearchFields($viewName, ['codigo', 'nombrecliente', 'numero2', 'observaciones']);
         
         // Ordenación
-        $this->addOrderBy($viewName, ['codigo'], 'code', 2);
-        $this->addOrderBy($viewName, ['fecha', 'hora'], 'date');
+        $this->addOrderBy($viewName, ['codigo'], 'code');
+        $this->addOrderBy($viewName, ['fecha', 'hora'], 'date', 2);
         $this->addOrderBy($viewName, ['numero'], 'number');
         $this->addOrderBy($viewName, ['total'], 'amount');
         
@@ -47,7 +47,11 @@ class GestionAlbaranes extends ListController
         $this->addFilterPeriod($viewName, 'date', 'period', 'fecha');
         $this->addFilterAutocomplete($viewName, 'codcliente', 'customer', 'codcliente', 'clientes', 'codcliente', 'nombre');
         $this->addFilterAutocomplete($viewName, 'codserie', 'serie', 'codserie', 'series', 'codserie', 'descripcion');
-        $this->addFilterCheckbox($viewName, 'editable', 'editable', 'editable');
+        $this->addFilterSelect($viewName, 'editable', 'editable', 'editable', [
+            '' => 'Todos',
+            '1' => 'Editable',
+            '0' => 'No editable'
+        ]);
         
         // Botones de acción
         $this->addButton($viewName, [
@@ -224,7 +228,11 @@ class GestionAlbaranes extends ListController
             // Recalcular totales de la factura
             $lineasFactura = $factura->getLines();
             Calculator::calculate($factura, $lineasFactura, true);
-            
+
+            // Marcar albarán como no editable (facturado)
+            $albaran->editable = false;
+            $albaran->save();
+
             $procesados++;
         }
         
