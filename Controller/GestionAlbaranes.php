@@ -12,9 +12,30 @@ use FacturaScripts\Core\Base\Calculator;
 use FacturaScripts\Core\Tools;
 use FacturaScripts\Dinamic\Model\AlbaranCliente;
 use FacturaScripts\Dinamic\Model\FacturaCliente;
+use FacturaScripts\Core\Base\DataBase;
+use Symfony\Component\HttpFoundation\Response;
+use FacturaScripts\Core\Base\DivisaTools;
+use FacturaScripts\Core\Model\User;
+use FacturaScripts\Core\Base\ACP;
 
 class GestionAlbaranes extends ListController
 {
+    public function privateCore(Response &$response, User $user, ACP $acp): void
+    {
+        parent::privateCore($response, $user, $acp);
+
+        // Manejar POST requests directamente
+        if ($this->request->getMethod() === 'POST') {
+            $action = $this->request->request->get('action');
+
+            if ($action === 'recalcular-totales') {
+                $this->recalcularTotalesAction();
+            } elseif ($action === 'convertir-facturas') {
+                $this->convertirFacturasAction();
+            }
+        }
+    }
+
     public function getPageData(): array
     {
         $data = parent::getPageData();
@@ -67,19 +88,6 @@ class GestionAlbaranes extends ListController
         $this->setSettings($viewName, 'btnDelete', false);
     }
     
-    protected function execPreviousAction($action)
-    {
-        switch ($action) {
-            case 'recalcular-totales':
-                return $this->recalcularTotalesAction();
-
-            case 'convertir-facturas':
-                return $this->convertirFacturasAction();
-        }
-
-        return parent::execPreviousAction($action);
-    }
-
     private function recalcularTotalesAction(): bool
     {
         $codes = $this->request->request->get('code', []);
