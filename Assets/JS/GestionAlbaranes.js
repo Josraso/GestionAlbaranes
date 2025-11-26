@@ -10,36 +10,37 @@ function recalcularTotales() {
         return;
     }
 
-    // Crear formulario y enviarlo
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = window.location.href;
+    // Usar AJAX para enviar los datos
+    const formData = new FormData();
+    formData.append('action', 'recalcular-totales');
+    formData.append('_token', getCSRFToken());
 
-    // Añadir token CSRF
-    const tokenInput = document.createElement('input');
-    tokenInput.type = 'hidden';
-    tokenInput.name = '_token';
-    tokenInput.value = getCSRFToken();
-    form.appendChild(tokenInput);
-
-    // Añadir action
-    const actionInput = document.createElement('input');
-    actionInput.type = 'hidden';
-    actionInput.name = 'action';
-    actionInput.value = 'recalcular-totales';
-    form.appendChild(actionInput);
-
-    // Añadir códigos seleccionados
     selectedCodes.forEach(code => {
-        const codeInput = document.createElement('input');
-        codeInput.type = 'hidden';
-        codeInput.name = 'code[]';
-        codeInput.value = code;
-        form.appendChild(codeInput);
+        formData.append('code[]', code);
     });
 
-    document.body.appendChild(form);
-    form.submit();
+    console.log('Enviando recalcularTotales con códigos:', selectedCodes);
+
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.text();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        alert('Albaranes recalculados. Recargando...');
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al recalcular totales: ' + error);
+    });
 }
 
 function convertirFacturas() {
@@ -54,36 +55,37 @@ function convertirFacturas() {
         return;
     }
 
-    // Crear formulario y enviarlo
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = window.location.href;
+    // Usar AJAX para enviar los datos
+    const formData = new FormData();
+    formData.append('action', 'convertir-facturas');
+    formData.append('_token', getCSRFToken());
 
-    // Añadir token CSRF
-    const tokenInput = document.createElement('input');
-    tokenInput.type = 'hidden';
-    tokenInput.name = '_token';
-    tokenInput.value = getCSRFToken();
-    form.appendChild(tokenInput);
-
-    // Añadir action
-    const actionInput = document.createElement('input');
-    actionInput.type = 'hidden';
-    actionInput.name = 'action';
-    actionInput.value = 'convertir-facturas';
-    form.appendChild(actionInput);
-
-    // Añadir códigos seleccionados
     selectedCodes.forEach(code => {
-        const codeInput = document.createElement('input');
-        codeInput.type = 'hidden';
-        codeInput.name = 'code[]';
-        codeInput.value = code;
-        form.appendChild(codeInput);
+        formData.append('code[]', code);
     });
 
-    document.body.appendChild(form);
-    form.submit();
+    console.log('Enviando convertirFacturas con códigos:', selectedCodes);
+
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.text();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        alert('Albaranes convertidos a facturas. Recargando...');
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al convertir a facturas: ' + error);
+    });
 }
 
 function getSelectedCodes() {
