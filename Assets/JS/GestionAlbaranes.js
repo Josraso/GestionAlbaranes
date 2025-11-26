@@ -1,5 +1,48 @@
 console.log('GestionAlbaranes.js loaded successfully');
 
+// Esperar a que el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded - Buscando botones...');
+
+    // Buscar botones por su texto
+    const buttons = document.querySelectorAll('button');
+    let recalcularBtn = null;
+    let convertirBtn = null;
+
+    buttons.forEach(btn => {
+        console.log('Botón encontrado:', btn.textContent);
+        if (btn.textContent.includes('Recalcular totales')) {
+            recalcularBtn = btn;
+            console.log('Botón "Recalcular totales" encontrado');
+        }
+        if (btn.textContent.includes('Convertir a facturas')) {
+            convertirBtn = btn;
+            console.log('Botón "Convertir a facturas" encontrado');
+        }
+    });
+
+    // Agregar listeners a los botones
+    if (recalcularBtn) {
+        console.log('Agregando listener a recalcularBtn');
+        recalcularBtn.addEventListener('click', function(e) {
+            console.log('Click en Recalcular totales');
+            e.preventDefault();
+            recalcularTotales();
+            return false;
+        });
+    }
+
+    if (convertirBtn) {
+        console.log('Agregando listener a convertirBtn');
+        convertirBtn.addEventListener('click', function(e) {
+            console.log('Click en Convertir a facturas');
+            e.preventDefault();
+            convertirFacturas();
+            return false;
+        });
+    }
+});
+
 function recalcularTotales() {
     console.log('recalcularTotales function called');
     const selectedCodes = getSelectedCodes();

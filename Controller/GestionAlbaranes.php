@@ -102,13 +102,11 @@ class GestionAlbaranes extends ListController
         
         // Botones de acción
         $this->addButton($viewName, [
-            'onclick' => 'recalcularTotales()',
             'icon' => 'fas fa-calculator',
             'label' => 'Recalcular totales'
         ]);
 
         $this->addButton($viewName, [
-            'onclick' => 'convertirFacturas()',
             'icon' => 'fas fa-file-invoice',
             'label' => 'Convertir a facturas'
         ]);
