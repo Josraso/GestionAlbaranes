@@ -1,6 +1,74 @@
 {% extends "Master/PanelController.html.twig" %}
 
+{% block css %}
+    {{ parent() }}
+    <style>
+        /* Colorear albaranes facturados en verde */
+        tr[data-editable="false"] {
+            background-color: #d4edda !important;
+        }
+        tr[data-editable="false"] td {
+            background-color: #d4edda !important;
+        }
+    </style>
+{% endblock %}
+
 {% block javascript %}
     {{ parent() }}
     <script src="{{ asset('Plugins/GestionAlbaranes/Assets/JS/GestionAlbaranes.js') }}"></script>
+
+    <script>
+        // Agregar filtro dropdown DESPUÉS de que todo cargue
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                // Colorear filas según editable
+                const rows = document.querySelectorAll('table tbody tr');
+                rows.forEach(row => {
+                    const editableCell = row.querySelector('[data-field="editable"]');
+                    if (editableCell) {
+                        const value = editableCell.textContent.trim().toLowerCase();
+                        if (!value.includes('sí') && !value.includes('1')) {
+                            row.setAttribute('data-editable', 'false');
+                        }
+                    }
+                });
+
+                // Agregar filtro dropdown
+                const filterDiv = document.createElement('div');
+                filterDiv.style.cssText = 'padding: 10px; margin: 10px 0; background: #f9f9f9; border-radius: 4px;';
+                filterDiv.innerHTML = `
+                    <label style="margin-right: 10px; font-weight: bold;">Estado de facturación:</label>
+                    <select id="invoiceFilter" style="padding: 5px 10px; border-radius: 3px; border: 1px solid #ccc;">
+                        <option value="">Todos</option>
+                        <option value="1">No facturados</option>
+                        <option value="0">Facturados</option>
+                    </select>
+                `;
+
+                const table = document.querySelector('table');
+                if (table && table.parentElement) {
+                    table.parentElement.insertBefore(filterDiv, table);
+                }
+
+                // Agregar listener al filtro
+                const filterSelect = document.getElementById('invoiceFilter');
+                if (filterSelect) {
+                    filterSelect.addEventListener('change', function() {
+                        const value = this.value;
+                        rows.forEach(row => {
+                            if (value === '') {
+                                row.style.display = '';
+                            } else if (value === '1') {
+                                const editable = row.getAttribute('data-editable');
+                                row.style.display = (editable !== 'false') ? '' : 'none';
+                            } else if (value === '0') {
+                                const editable = row.getAttribute('data-editable');
+                                row.style.display = (editable === 'false') ? '' : 'none';
+                            }
+                        });
+                    });
+                }
+            }, 100);
+        });
+    </script>
 {% endblock %}

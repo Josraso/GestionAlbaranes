@@ -88,9 +88,9 @@ class GestionAlbaranes extends ListController
         // Búsqueda
         $this->addSearchFields($viewName, ['codigo', 'nombrecliente', 'numero2', 'observaciones']);
         
-        // Ordenación
-        $this->addOrderBy($viewName, ['codigo'], 'code', 2);
-        $this->addOrderBy($viewName, ['fecha', 'hora'], 'date');
+        // Ordenación - Por defecto por fecha DESC (más nuevos primero)
+        $this->addOrderBy($viewName, ['fecha', 'hora'], 'date', 2);
+        $this->addOrderBy($viewName, ['codigo'], 'code');
         $this->addOrderBy($viewName, ['numero'], 'number');
         $this->addOrderBy($viewName, ['total'], 'amount');
         
@@ -253,6 +253,7 @@ class GestionAlbaranes extends ListController
             $factura->fecha = $fechaFactura;
             $factura->hora = $horaFactura;
             $factura->nombrecliente = $albaran->nombrecliente;
+            $factura->numero2 = $albaran->numero2;
             $factura->observaciones = $albaran->observaciones;
             $factura->cifnif = $albaran->cifnif;
             $factura->codpais = $albaran->codpais;
@@ -299,7 +300,11 @@ class GestionAlbaranes extends ListController
             // Recalcular totales de la factura
             $lineasFactura = $factura->getLines();
             Calculator::calculate($factura, $lineasFactura, true);
-            
+
+            // Marcar el albarán como NO EDITABLE (ya está facturado)
+            $albaran->editable = false;
+            $albaran->save();
+
             $procesados++;
         }
 
