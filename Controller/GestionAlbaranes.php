@@ -30,25 +30,39 @@ class GestionAlbaranes extends ListController
 
     public function privateCore(&$response, $user, $permissions): void
     {
-        parent::privateCore($response, $user, $permissions);
-
         $this->writeLog('=== privateCore called ===');
         $this->writeLog('Request method: ' . $this->request->getMethod());
 
-        // Manejar POST requests directamente
-        if ($this->request->getMethod() === 'POST') {
-            $action = $this->request->request->get('action');
-            $this->writeLog('POST action received: ' . ($action ?? 'NO ACTION'));
+        // Capturar parámetros ANTES de que parent los limpie
+        $action = null;
+        $codes = [];
 
-            if ($action === 'recalcular-totales') {
-                $this->writeLog('Calling recalcularTotalesAction');
-                $this->recalcularTotalesAction();
-            } elseif ($action === 'convertir-facturas') {
-                $this->writeLog('Calling convertirFacturasAction');
-                $this->convertirFacturasAction();
-            } else {
-                $this->writeLog('No matching action found');
+        if ($this->request->getMethod() === 'POST') {
+            // Intentar desde $_POST directamente (más confiable)
+            if (isset($_POST['action'])) {
+                $action = $_POST['action'];
+                $codes = isset($_POST['code']) ? (array)$_POST['code'] : [];
             }
+            // Fallback a request object
+            if (!$action) {
+                $action = $this->request->request->get('action');
+                $codes = $this->request->request->get('code', []);
+            }
+
+            $this->writeLog('POST action from $_POST: ' . ($action ?? 'NULL'));
+            $this->writeLog('POST codes: ' . json_encode($codes));
+        }
+
+        // Ahora llamar al parent
+        parent::privateCore($response, $user, $permissions);
+
+        // Procesar la acción después del parent
+        if ($action === 'recalcular-totales') {
+            $this->writeLog('Calling recalcularTotalesAction with codes: ' . json_encode($codes));
+            $this->recalcularTotalesAction($codes);
+        } elseif ($action === 'convertir-facturas') {
+            $this->writeLog('Calling convertirFacturasAction with codes: ' . json_encode($codes));
+            $this->convertirFacturasAction($codes);
         }
     }
 
@@ -104,12 +118,15 @@ class GestionAlbaranes extends ListController
         $this->setSettings($viewName, 'btnDelete', false);
     }
     
-    private function recalcularTotalesAction(): bool
+    private function recalcularTotalesAction(array $codes = []): bool
     {
         $this->writeLog('=== recalcularTotalesAction started ===');
 
-        $codes = $this->request->request->get('code', []);
-        $this->writeLog('Codes received: ' . json_encode($codes));
+        if (empty($codes)) {
+            // Fallback a request en caso de que se llame sin parámetros
+            $codes = $this->request->request->get('code', []);
+        }
+        $this->writeLog('Codes in action: ' . json_encode($codes));
 
         if (empty($codes)) {
             $this->writeLog('No codes provided');
@@ -163,12 +180,15 @@ class GestionAlbaranes extends ListController
         return true;
     }
     
-    private function convertirFacturasAction(): bool
+    private function convertirFacturasAction(array $codes = []): bool
     {
         $this->writeLog('=== convertirFacturasAction started ===');
 
-        $codes = $this->request->request->get('code', []);
-        $this->writeLog('Codes received: ' . json_encode($codes));
+        if (empty($codes)) {
+            // Fallback a request en caso de que se llame sin parámetros
+            $codes = $this->request->request->get('code', []);
+        }
+        $this->writeLog('Codes in action: ' . json_encode($codes));
 
         if (empty($codes)) {
             $this->writeLog('No codes provided');

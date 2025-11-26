@@ -1,4 +1,7 @@
+console.log('GestionAlbaranes.js loaded successfully');
+
 function recalcularTotales() {
+    console.log('recalcularTotales function called');
     const selectedCodes = getSelectedCodes();
 
     if (selectedCodes.length === 0) {
@@ -44,6 +47,7 @@ function recalcularTotales() {
 }
 
 function convertirFacturas() {
+    console.log('convertirFacturas function called');
     const selectedCodes = getSelectedCodes();
 
     if (selectedCodes.length === 0) {
