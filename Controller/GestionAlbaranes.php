@@ -21,7 +21,7 @@ class GestionAlbaranes extends ListController
         $data['menu'] = 'sales';
         $data['title'] = 'Gestión de Albaranes';
         $data['icon'] = 'fas fa-file-alt';
-        $data['js'] = 'GestionAlbaranes';
+        $data['template'] = 'GestionAlbaranes';
         return $data;
     }
     
@@ -51,17 +51,15 @@ class GestionAlbaranes extends ListController
         
         // Botones de acción
         $this->addButton($viewName, [
-            'action' => 'recalcular-totales',
+            'onclick' => 'recalcularTotales()',
             'icon' => 'fas fa-calculator',
-            'label' => 'Recalcular totales',
-            'type' => 'action'
+            'label' => 'Recalcular totales'
         ]);
 
         $this->addButton($viewName, [
-            'action' => 'convertir-facturas',
+            'onclick' => 'convertirFacturas()',
             'icon' => 'fas fa-file-invoice',
-            'label' => 'Convertir a facturas',
-            'type' => 'action'
+            'label' => 'Convertir a facturas'
         ]);
         
         // Deshabilitar creación y borrado
@@ -74,14 +72,14 @@ class GestionAlbaranes extends ListController
         switch ($action) {
             case 'recalcular-totales':
                 return $this->recalcularTotalesAction();
-                
+
             case 'convertir-facturas':
                 return $this->convertirFacturasAction();
         }
-        
+
         return parent::execPreviousAction($action);
     }
-    
+
     private function recalcularTotalesAction(): bool
     {
         $codes = $this->request->request->get('code', []);

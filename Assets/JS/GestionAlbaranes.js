@@ -87,8 +87,21 @@ function convertirFacturas() {
 }
 
 function getSelectedCodes() {
-    const checkboxes = document.querySelectorAll('input[type="checkbox"][name="code[]"]:checked');
-    return Array.from(checkboxes).map(cb => cb.value);
+    // Buscar checkboxes con nombre "code[]" (FacturaScripts estándar)
+    let checkboxes = document.querySelectorAll('input[type="checkbox"][name="code[]"]:checked');
+    if (checkboxes.length > 0) {
+        return Array.from(checkboxes).map(cb => cb.value);
+    }
+
+    // Fallback: buscar cualquier checkbox seleccionado en un formulario de lista
+    checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+    let codes = [];
+    checkboxes.forEach(cb => {
+        if (cb.name && cb.name !== '_token' && cb.name !== 'action') {
+            codes.push(cb.value);
+        }
+    });
+    return codes;
 }
 
 function getCSRFToken() {
