@@ -51,17 +51,17 @@ class GestionAlbaranes extends ListController
         
         // Botones de acción
         $this->addButton($viewName, [
-            'action' => 'recalcularTotales()',
+            'action' => 'recalcular-totales',
             'icon' => 'fas fa-calculator',
             'label' => 'Recalcular totales',
-            'type' => 'js'
+            'type' => 'action'
         ]);
-        
+
         $this->addButton($viewName, [
-            'action' => 'convertirFacturas()',
+            'action' => 'convertir-facturas',
             'icon' => 'fas fa-file-invoice',
             'label' => 'Convertir a facturas',
-            'type' => 'js'
+            'type' => 'action'
         ]);
         
         // Deshabilitar creación y borrado
@@ -85,28 +85,41 @@ class GestionAlbaranes extends ListController
     private function recalcularTotalesAction(): bool
     {
         $codes = $this->request->request->get('code', []);
-        
+
         if (empty($codes)) {
             Tools::log()->warning('No hay albaranes seleccionados');
             return true;
         }
-        
+
         $procesados = 0;
-        
+        $errores = 0;
+
         foreach ($codes as $code) {
             $albaran = new AlbaranCliente();
             if ($albaran->loadFromCode($code)) {
                 $lines = $albaran->getLines();
                 if (Calculator::calculate($albaran, $lines, true)) {
-                    $procesados++;
+                    if ($albaran->save()) {
+                        $procesados++;
+                    } else {
+                        $errores++;
+                    }
+                } else {
+                    $errores++;
                 }
+            } else {
+                $errores++;
             }
         }
-        
+
         if ($procesados > 0) {
             Tools::log()->notice("Recalculados $procesados albaranes correctamente");
         }
-        
+
+        if ($errores > 0) {
+            Tools::log()->warning("Errores al procesar $errores albaranes");
+        }
+
         return true;
     }
     
