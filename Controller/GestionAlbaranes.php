@@ -15,18 +15,39 @@ use FacturaScripts\Dinamic\Model\FacturaCliente;
 
 class GestionAlbaranes extends ListController
 {
+    private function writeLog($message): void
+    {
+        $logDir = __DIR__ . '/../logs';
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0755, true);
+        }
+
+        $logFile = $logDir . '/debug.log';
+        $timestamp = date('Y-m-d H:i:s');
+        $logMessage = "[$timestamp] $message\n";
+        file_put_contents($logFile, $logMessage, FILE_APPEND);
+    }
+
     public function privateCore(&$response, $user, $permissions): void
     {
         parent::privateCore($response, $user, $permissions);
 
+        $this->writeLog('=== privateCore called ===');
+        $this->writeLog('Request method: ' . $this->request->getMethod());
+
         // Manejar POST requests directamente
         if ($this->request->getMethod() === 'POST') {
             $action = $this->request->request->get('action');
+            $this->writeLog('POST action received: ' . ($action ?? 'NO ACTION'));
 
             if ($action === 'recalcular-totales') {
+                $this->writeLog('Calling recalcularTotalesAction');
                 $this->recalcularTotalesAction();
             } elseif ($action === 'convertir-facturas') {
+                $this->writeLog('Calling convertirFacturasAction');
                 $this->convertirFacturasAction();
+            } else {
+                $this->writeLog('No matching action found');
             }
         }
     }
@@ -85,9 +106,13 @@ class GestionAlbaranes extends ListController
     
     private function recalcularTotalesAction(): bool
     {
+        $this->writeLog('=== recalcularTotalesAction started ===');
+
         $codes = $this->request->request->get('code', []);
+        $this->writeLog('Codes received: ' . json_encode($codes));
 
         if (empty($codes)) {
+            $this->writeLog('No codes provided');
             Tools::log()->warning('No hay albaranes seleccionados');
             return true;
         }
@@ -96,22 +121,36 @@ class GestionAlbaranes extends ListController
         $errores = 0;
 
         foreach ($codes as $code) {
+            $this->writeLog("Processing code: $code");
+
             $albaran = new AlbaranCliente();
             if ($albaran->loadFromCode($code)) {
+                $this->writeLog("Albaran loaded: $code");
+
                 $lines = $albaran->getLines();
+                $this->writeLog("Lines count: " . count($lines));
+
                 if (Calculator::calculate($albaran, $lines, true)) {
+                    $this->writeLog("Calculator calculated for: $code");
+
                     if ($albaran->save()) {
+                        $this->writeLog("Albaran saved: $code");
                         $procesados++;
                     } else {
+                        $this->writeLog("ERROR: Could not save albaran: $code");
                         $errores++;
                     }
                 } else {
+                    $this->writeLog("ERROR: Calculator failed for: $code");
                     $errores++;
                 }
             } else {
+                $this->writeLog("ERROR: Could not load albaran: $code");
                 $errores++;
             }
         }
+
+        $this->writeLog("Recalcular finished - Procesados: $procesados, Errores: $errores");
 
         if ($procesados > 0) {
             Tools::log()->notice("Recalculados $procesados albaranes correctamente");
@@ -126,13 +165,17 @@ class GestionAlbaranes extends ListController
     
     private function convertirFacturasAction(): bool
     {
+        $this->writeLog('=== convertirFacturasAction started ===');
+
         $codes = $this->request->request->get('code', []);
-        
+        $this->writeLog('Codes received: ' . json_encode($codes));
+
         if (empty($codes)) {
+            $this->writeLog('No codes provided');
             Tools::log()->warning('No hay albaranes seleccionados');
             return true;
         }
-        
+
         $procesados = 0;
         $errores = 0;
         
@@ -241,15 +284,17 @@ class GestionAlbaranes extends ListController
             
             $procesados++;
         }
-        
+
+        $this->writeLog("Convertir finished - Procesados: $procesados, Errores: $errores");
+
         if ($procesados > 0) {
             Tools::log()->notice("Creadas $procesados facturas correctamente");
         }
-        
+
         if ($errores > 0) {
             Tools::log()->warning("Errores al procesar $errores albaranes");
         }
-        
+
         return true;
     }
 }
